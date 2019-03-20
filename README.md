@@ -1,2 +1,3 @@
-# faster-pandas
-A much faster pandas!!!
+# simpler-pandas
+Much simple pandas!
+
