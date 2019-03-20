@@ -55,7 +55,7 @@ def test_indexing():
            np.all(tmp.dict['b'] == np.array([4, 5, 6])) and \
            np.all(tmp.dict[1] == np.array([6, 7, 8])) and \
            np.all(tmp.index == np.array(['a', 'b', 'c']))
-           
+
 def test_assign():
     # column assignment
     tmp = a.copy()

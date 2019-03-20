@@ -22,24 +22,27 @@ class DataFrame:
             self.index = np.array(range(l), copy=copy)
 
     def __str__(self):
-        res = ""
+        res = "{:>7}".format("index")
+        for k in self.keys():
+            res += "{:>7}".format(k)
+        res += "\n"
         if len(self) <= 10:
             for i in range(len(self)):
-                res += "{:>5}".format(self.index[i])
+                res += "{:>7}".format(self.index[i])
                 for key in self.keys():
-                    res += ("{:>5}".format(self.dict[key][i]))
+                    res += ("{:>7}".format(self.dict[key][i]))
                 res += "\n"
         else:
             for i in range(5):
-                res += "{:>5}".format(self.index[i])
+                res += "{:>7}".format(self.index[i])
                 for key in self.keys():
-                    res += ("{:>5}".format(self.dict[key][i]))
+                    res += ("{:>7}".format(self.dict[key][i]))
                 res += "\n"
             res += ('... ...\n')
             for i in range(5):
-                res += "{:>5}".format(self.index[len(self) - 5 + i])
+                res += "{:>7}".format(self.index[len(self) - 5 + i])
                 for key in self.keys():
-                    res += ("{:>5}".format(self.dict[key][len(self) - 5 + i]))
+                    res += ("{:>7}".format(self.dict[key][len(self) - 5 + i]))
                 res += "\n"
         return res
     
@@ -87,11 +90,14 @@ class DataFrame:
                 self.dict[k][key] = value
 
     def head(self, l = 5):
-        res = ""
+        res = "idx"
+        for k in self.keys():
+            res += "{:>7}".format(k)
+        res += "\n"
         for i in range(min(l, len(self))):
-            res += "{:>5}".format(self.index[i])
+            res += "{:>7}".format(self.index[i])
             for key in self.keys():
-                res += ("{:>5}".format(self.dict[key][i]))
+                res += ("{:>7}".format(self.dict[key][i]))
             res += "\n"
         return res
 
