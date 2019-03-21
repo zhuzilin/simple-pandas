@@ -19,11 +19,15 @@
 In simple pandas, the Series is only two numpy array, one for values and one for index. And a DataFrame is only a dictionary and an index. In any time during the manipulation, you could use:
 
 ```python
-ps.values, ps.index
-pdf.dict, pdf,index
+series.values, series.index
+dataframe.dict, dataframe.index
 ```
 
 to visit and modify them directly!
+
+Also, simple pandas have much easier indexing and assignment system! Easy to remember and easy to use!
+
+For a simple exploratory, see [here](https://github.com/zhuzilin/simple-pandas/blob/master/introduction.ipynb)
 
 ## Interact with pandas
 
@@ -152,7 +156,7 @@ dtype: int32
       c      3      8
 ```
 
-### Assignment
+## Assignment
 
 Because we only return view of the original data when indexing, it is very easy to assign new values.
 
@@ -285,6 +289,8 @@ Apart from a simple indexing mechanism, I have changed some of the method for pa
 
 ### Series
 
+The test for Series is [here](https://github.com/zhuzilin/simple-pandas/blob/master/series_time.ipynb)
+
 | method  | boost |
 | :------ | ----- |
 | append  | 10x   |
@@ -292,6 +298,8 @@ Apart from a simple indexing mechanism, I have changed some of the method for pa
 | replace | 100x  |
 
 ### DataFrame
+
+The test for DataFrame is [here](https://github.com/zhuzilin/simple-pandas/blob/master/dataframe_time.ipynb)
 
 | method  | boost |
 | ------- | ----- |
