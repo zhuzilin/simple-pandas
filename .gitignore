@@ -106,3 +106,8 @@ venv.bak/
 # jupyter notebook
 # *.ipynb
 # .ipynb_checkpoints/
+
+# zipfile
+*.zip
+*.tar
+*.tar.gz

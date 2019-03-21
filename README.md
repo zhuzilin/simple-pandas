@@ -1,6 +1,6 @@
 # simple pandas
 
- ![travis](https://travis-ci.com/zhuzilin/simpler-pandas.svg?token=ivffL3twW2xYCzYsya8A&branch=master)
+ ![travis](https://travis-ci.com/zhuzilin/simple-pandas.svg?branch=master)
 
  ![](https://66.media.tumblr.com/decf9e4a17b56f692c929088e519f032/tumblr_p2q1ak7m3G1uaogmwo9_250.png)
 
@@ -8,11 +8,18 @@
 
 ## Contents
 
+- Installation
 - How simpel can it be
 - Interact with pandas
 - Indexing
 - Assignment
 - Boost
+
+## Installation
+
+```bash
+pip install simple-pandas
+```
 
 ## How simple can it be?
 
