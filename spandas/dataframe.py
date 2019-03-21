@@ -2,16 +2,32 @@ from .series import Series
 from collections.abc import Iterable
 import numpy as np
 class DataFrame:
-    def __init__(self, values, index=None, copy=True):
+    def __init__(self, values, index=None, columns=None, copy=True):
         self.dict = {}
         l = 0
         try:
-            for key, value in values.items():
-                if l == 0:
-                    l = len(value)
-                else:
-                    assert l == len(value), "the length of each column must match!"
-                self.dict[key] = np.array(value, copy=copy)
+            if columns is not None:
+                for key in columns:
+                    try:
+                        value = values[key]
+                    except:
+                        continue
+                    if l == 0:
+                        l = len(value)
+                    else:
+                        assert l == len(value), "the length of each column must match!"
+                    self.dict[key] = np.array(value, copy=copy)
+                for key in columns:
+                    if key not in self.dict:
+                        self.dict[key] = np.empty(l)
+                        self.dict[key][:] = np.nan
+            else:
+                for key, value in values.items():
+                    if l == 0:
+                        l = len(value)
+                    else:
+                        assert l == len(value), "the length of each column must match!"
+                    self.dict[key] = np.array(value, copy=copy)
         except:
             for key, value in values.items():
                 self.dict[key] = np.array([value], copy=copy)
@@ -64,7 +80,14 @@ class DataFrame:
             if not isinstance(key, Iterable) and not isinstance(key, slice):
                 key = [key]
             return DataFrame({k: v[key] for k, v in self.dict.items()}, self.index[key], copy=False)
-
+    
+    def get_by_index(self, key):
+        if not isinstance(key, list):
+            key = [key]
+        row2index = dict(zip(range(len(self)), self.index))
+        key_row = [r for r, i in row2index.items() if i in key]
+        return self[np.array(key_row, copy=False)]
+    
     # when assigning with column and row, 
     # please always use the row first and column second
     # because numpy advance indexing will return a copy instead for a view
@@ -88,6 +111,27 @@ class DataFrame:
                 key = np.array([key])
             for k in self:
                 self.dict[k][key] = value
+    
+    def set_by_index(self, key, value):
+        try:
+            k2v = dict(zip(key, value))
+        except:
+            k2v = {key: value}
+        row2index = dict(zip(range(len(self)), self.index))
+        key_row = [r for r, i in row2index.items() if i in k2v]
+        value_row = [k2v[row2index[r]] for r in key_row]
+        assert len(key_row) == len(value_row)
+        self[np.array(key_row, copy=False)] = value_row
+
+    def __delitem__(self, key):
+        try:
+            for k in key:
+                try:
+                    del self.dict[k]
+                except:
+                    pass
+        except:
+            del self.dict[key]
 
     def head(self, l = 5):
         res = "idx"
@@ -114,17 +158,25 @@ class DataFrame:
             yield self.index[i], {k: v[i] for k, v in self.dict.items()}
 
     def append(self, s):
-        # only support append list of DataFrame now
+        # only support append list of DataFrame or dict now
         if isinstance(s, list):
-            res_dict = {k: list(v) for k, v in self.dict.items()}
-            res_index = list(self.index)
+            append_dict = {k: [] for k in self.keys()}
+            append_index = []
             for d in s:
-                assert d.keys() == res_dict.keys(), "key not conform"
-                if isinstance(d, dict):
-                    d = DataFrame(d, copy=False)
-                for k in res_dict.keys():
-                    res_dict[k] += list(d.dict[k])
-                res_index += list(d.index)
+                assert d.keys() == self.keys(), "keys not conform"
+                if not isinstance(d, DataFrame):
+                    d = DataFrame(d)
+                for k in append_dict.keys():
+                    append_dict[k].append(d.dict[k])
+                append_index.append(d.index)
+            res_dict = {k: np.append(self.dict[k], append_dict[k]) for k in self.keys()}
+            res_index = np.append(self.index, append_index)
+            return DataFrame(res_dict, res_index)
+        else:
+            if not isinstance(s, DataFrame):
+                s = DataFrame(s)
+            res_dict = {k: np.append(self.dict[k], s.dict[k]) for k in self.keys()}
+            res_index = np.append(self.index, s.index)
             return DataFrame(res_dict, res_index)
 
     def keys(self):
@@ -132,3 +184,16 @@ class DataFrame:
     
     def copy(self):
         return DataFrame(self.dict, self.index)
+    
+    @property
+    def columns(self):
+        return list(self.dict.keys())
+    
+    @property
+    def T(self):
+        res_index = self.columns
+        res_columns = self.index
+        res_values = np.array([self.dict[k] for k in res_index], copy=False).T
+        res_dict = dict(zip(res_columns, res_values))
+        return DataFrame(res_dict, index=res_index, columns=res_columns)
+        

@@ -1,7 +1,18 @@
 # simple pandas
-  ![](https://66.media.tumblr.com/decf9e4a17b56f692c929088e519f032/tumblr_p2q1ak7m3G1uaogmwo9_250.png)
 
- [pandas](http://pandas.pydata.org/pandas-docs/stable/) is powerful but complex... Most of the time, I only need to make some small change of our data, but the indexing(`loc`, `iloc`, `at`, `ix`...) is 😭😭😭. If this happens to you as well, then feel free to try my solution to simplify pandas!
+ ![travis](https://travis-ci.com/zhuzilin/simpler-pandas.svg?token=ivffL3twW2xYCzYsya8A&branch=master)
+
+ ![](https://66.media.tumblr.com/decf9e4a17b56f692c929088e519f032/tumblr_p2q1ak7m3G1uaogmwo9_250.png)
+
+[pandas](http://pandas.pydata.org/pandas-docs/stable/) is a powerful library for data science. However, it it really complex... Most of the time, I only need to make some small change of our data, but the indexing(`loc`, `iloc`, `at`, `ix`...) is 😭😭😭. If this happens to you as well, then feel free to try my solution to simplify pandas!
+
+## Contents
+
+- How simpel can it be
+- Interact with pandas
+- Indexing
+- Assignment
+- Boost
 
 ## How simple can it be?
 
@@ -14,14 +25,14 @@ pdf.dict, pdf,index
 
 to visit and modify them directly!
 
-## Interface with pandas
+## Interact with pandas
 
 And to make it simple, this library does not include some method like `read_csv` and we may need to cast from simple pandas to pandas. To turn a pandas Series or DataFrame into a simple pandas Series or DataFrame, we only need:
 
 ```python
 import spandas as spd
-ps = spd.Series(s)
-pdf = spd.DataFrame(df)
+ps = spd.Series(s, s.index)
+pdf = spd.DataFrame(df, df.index)
 ```
 
 And to convert back, only:
@@ -43,11 +54,11 @@ Notice all indexing **will not return a copy**. And to get a copy, please use `.
 ```python
 >>> a = spd.Series([1, 2, 3, 4, 5], index=['a', 'b', 'c', 'd', 'e'])
 >>> print(a)
-    a    1
-    b    2
-    c    3
-    d    4
-    e    5
+      a      1
+      b      2
+      c      3
+      d      4
+      e      5
 dtype: int32
 ```
 
@@ -66,9 +77,9 @@ And of course, we could index with a boolean Series
 
 ```python
 >>> print(a[a>2])
-    c    3
-    d    4
-    e    5
+      c      3
+      d      4
+      e      5
 dtype: int32
 ```
 
@@ -76,11 +87,18 @@ And to index with the index label, we need to:
 
 ```python
 >>> print(a[a.index == 'e'])
-    e    5
+      e      5
+dtype: int32
+>>> print(a.get_by_index('e'))
+      e      5
 dtype: int32
 >>> print(a[np.isin(a.index, ['b', 'c'])])
-    b    2
-    c    3
+      b      2
+      c      3
+dtype: int32
+>>> print(a.get_by_index(['c', 'b']))
+      b      2
+      c      3
 dtype: int32
 ```
 
@@ -112,7 +130,11 @@ The default index for a DataFrame is also  the **row number**.
 >>> print(a[1:3])
   index      a      b      1
       b      2      5      7
-      c      3      6      8prin
+      c      3      6      8
+>>> print(a.get_by_index(['a', 'c']))
+  index      a      b      1
+      a      1      4      6
+      c      3      6      8
 ```
 
 And to index with the column, we could use double square bracket:
@@ -140,29 +162,38 @@ Because we only return view of the original data when indexing, it is very easy 
 >>> tmp = a.copy()
 >>> tmp[1] = 10
 >>> print(tmp)
-    a    1
-    b   10
-    c    3
-    d    4
-    e    5
+      a      1
+      b     10
+      c      3
+      d      4
+      e      5
 dtype: int32
 >>> tmp = a.copy()
 >>> tmp[np.array([1, 2, 3])] = 10
 >>> print(tmp)
-    a    1
-    b   10
-    c   10
-    d   10
-    e    5
+      a      1
+      b     10
+      c     10
+      d     10
+      e      5
 dtype: int32
 >>> tmp = a.copy()
 >>> tmp[a.index == 'e'] = 10
 >>> print(tmp)
-    a    1
-    b    2
-    c    3
-    d    4
-    e   10
+      a      1
+      b      2
+      c      3
+      d      4
+      e     10
+dtype: int32
+>>> tmp = a.copy()
+>>> tmp.set_by_index(['e', 'd'], [10, 9])
+>>> print(tmp)
+      a      1
+      b      2
+      c      3
+      d      9
+      e     10
 dtype: int32
 ```
 
@@ -190,6 +221,13 @@ We could update rows:
 >>> print(tmp)
   index      a      b      1
       a     30     30     30
+      b      2      5      7
+      c     30     30     30
+>>> tmp = a.copy()
+>>> tmp.set_by_index(['a', 'c'], [20, 30])
+>>> print(tmp)
+  index      a      b      1
+      a     20     20     20
       b      2      5      7
       c     30     30     30
 ```
@@ -230,6 +268,13 @@ And finally, the nested assignment
       a     30     30      6
       b      2      5      7
       c     30     30      8
+>>> tmp = a.copy()
+>>> tmp[['a', 'b']].set_by_index('c', 30)
+>>> print(tmp)
+  index      a      b      1
+      a      1      4      6
+      b      2      5      7
+      c     30     30      8
 ```
 
 Notice: because that all advance indexing for a numpy array will create a copy, you must put the column index before row index to achieve correct nested assignment.
@@ -238,5 +283,18 @@ Notice: because that all advance indexing for a numpy array will create a copy, 
 
 Apart from a simple indexing mechanism, I have changed some of the method for pandas Series and DataFrame to make it faster. The test result will be update here soon. And notice if some function is not listed below, the pandas version may be better.
 
+### Series
 
+| method  | boost |
+| :------ | ----- |
+| append  | 10x   |
+| apply   | 1.5x  |
+| replace | 100x  |
+
+### DataFrame
+
+| method  | boost |
+| ------- | ----- |
+| append  | 20x   |
+| iterrow | 30x   |
 

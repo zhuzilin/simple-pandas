@@ -10,6 +10,12 @@ A Series is basically a data structure with 2 numpy array:
 class Series:
     # initiate with pandas Series
     def __init__(self, values, index=None, copy=True):
+        if isinstance(values, dict):
+            if index is None:
+                index = list(values.keys())
+                values = list(values.values())
+            else:
+                values = [values[k] if k in values else np.nan for k in index]
         # try to convert values into a np array
         try:
             self.values = np.array(values, copy=copy)
@@ -26,13 +32,13 @@ class Series:
         res = ""
         if len(self) <= 10:
             for i in range(len(self)):
-                res += ("{:>5}{:>5}\n".format(self.index[i], self.values[i]))
+                res += ("{:>7}{:>7}\n".format(self.index[i], self.values[i]))
         else:
             for i in range(5):
-                res += ("{:>5}{:>5}\n".format(self.index[i], self.values[i]))
+                res += ("{:>7}{:>7}\n".format(self.index[i], self.values[i]))
             res += ('... ...\n')
             for i in range(5):
-                res += ("{:>5}{:>5}\n".format(self.index[len(self)-5+i], self.values[len(self)-5+i]))
+                res += ("{:>7}{:>7}\n".format(self.index[len(self)-5+i], self.values[len(self)-5+i]))
         res += "dtype: {}".format(self.values.dtype)
         return res
 
@@ -91,13 +97,50 @@ class Series:
         else:
             tmp = self.values != s
         return Series(tmp, self.index)
-
+    
+    """
+    arithmetic
+    """
+    # +
+    def __add__(self, s):
+        if isinstance(s, Series):
+            tmp = self.values + s.values
+        else:
+            tmp = self.values + s
+        return Series(tmp, self.index)
+    
+    # -
+    def __sub__(self, s):
+        if isinstance(s, Series):
+            tmp = self.values - s.values
+        else:
+            tmp = self.values - s
+        return Series(tmp, self.index)
+    
+    # *
+    def __mul__(self, s):
+        if isinstance(s, Series):
+            tmp = self.values * s.values
+        else:
+            tmp = self.values * s
+        return Series(tmp, self.index)
+    
+    # /
+    def __truediv__(self, s):
+        if isinstance(s, Series):
+            tmp = self.values / s.values
+        else:
+            tmp = self.values / s
+        return Series(tmp, self.index)
     """
     indexing
     TODO: index slice
     """
     # all get does not copy
     def __getitem__(self, key):
+        return self.get_by_row(key)
+    
+    def get_by_row(self, key):
         # boolean
         if isinstance(key, Series):
             assert len(self) == len(key), "the length of key does not match!"
@@ -106,9 +149,18 @@ class Series:
             return Series(self.values[key], self.index[key], copy=False)
         except:
             return self.values[key]
-
-    # TODO: assign a number to a series
+    
+    def get_by_index(self, key):
+        if not isinstance(key, list):
+            key = [key]
+        row2index = dict(zip(range(len(self)), self.index))
+        key_row = [r for r, i in row2index.items() if i in key]
+        return self[np.array(key_row, copy=False)]
+    
     def __setitem__(self, key, value):
+        self.set_by_row(key, value)
+
+    def set_by_row(self, key, value):
         if isinstance(key, Series):
             assert len(self) == len(key), "the length of key does not match!"
             self.values[key.values] = value
@@ -116,6 +168,17 @@ class Series:
             key = np.array(key, copy=False)
         self.values[key] = value
 
+    def set_by_index(self, key, value):
+        try:
+            k2v = dict(zip(key, value))
+        except:
+            k2v = {key: value}
+        row2index = dict(zip(range(len(self)), self.index))
+        key_row = [r for r, i in row2index.items() if i in k2v]
+        value_row = [k2v[row2index[r]] for r in key_row]
+        assert len(key_row) == len(value_row)
+        self[np.array(key_row, copy=False)] = value_row
+        
     def __iter__(self):
         for v in self.values:
             yield v
@@ -126,14 +189,10 @@ class Series:
     def append(self, s):
         # TODO: only support list of series now
         if isinstance(s, list):
-            res_values, res_index = list(self.values), list(self.index)
-            for l in s:
-                res_values += list(l.values)
-                res_index += list(l.index)
-            assert len(res_values) == len(res_index), \
-                "length of result values and index does not match"
-            return Series(res_values, res_index)
-        return Series(list(self.values) + list(s.values), list(self.index) + list(s.index))
+            append_values = [l.values for l in s]
+            append_index = [l.index for l in s]
+            return Series(np.append(self.values, append_values), np.append(self.index, append_index))
+        return Series(np.append(self.values, s.values), np.append(self.index, s.index))
 
     def apply(self, f):
         vf = np.vectorize(f)
@@ -142,11 +201,25 @@ class Series:
     def head(self, l = 5):
         res = ""
         for i in range(min(l, len(self))):
-            res += ("{:>5}{:>5}\n".format(self.index[i], self.values[i]))
+            res += ("{:>7}{:>7}\n".format(self.index[i], self.values[i]))
         return res
 
-    def replace(self, d):
-        return Series([d[x] for x in self.values])
+    def replace(self, d, drop=True):
+        if drop:
+            return Series([d[x] for x in self.values if x in d], self.index)
+        else:
+            return Series([d[x] if x in d else x for x in self.values], self.index)
     
     def copy(self):
         return Series(self.values, self.index)
+    
+    @property
+    def dict(self):
+        res = dict(zip(self.index, self.values))
+        assert len(res) == len(self), "index have repetitive terms"
+        return res
+    
+    def isnull(self):
+        return Series(np.isnan(self.values), self.index)
+    
+    

@@ -14,6 +14,14 @@ def test_constructor():
     assert id(a.values) != id(values) and id(a.index) != id(index)
     tmp = Series(values, index, copy=False)
     assert id(tmp.values) == id(values) and id(tmp.index) == id(index)
+    tmp = Series({'a': 1, 'b': 2})
+    assert np.all(tmp.values == np.array([1, 2])) and \
+           np.all(tmp.index == np.array(['a', 'b']))
+    # initialize with pd.Series
+    tmp_s = pd.Series(values, index)
+    tmp = Series(tmp_s, tmp_s.index)
+    assert np.all(tmp.values == np.arange(5)) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
 
 def test_indexing():
     tmp = a[3]
@@ -27,13 +35,17 @@ def test_indexing():
     tmp = a[a > 2]
     assert np.all(tmp.values == np.array([3, 4])) and \
            np.all(tmp.index == np.array(['d', 'e']))
-    # index with index label
+    # get by index
     tmp = a[a.index == 'e']
     assert np.all(tmp.values == np.array([4])) and \
            np.all(tmp.index == np.array(['e']))
-    tmp = a[np.isin(a.index, ['b', 'c'])]
+    tmp = a.get_by_index('e')
+    assert np.all(tmp.values == np.array([4])) and \
+           np.all(tmp.index == np.array(['e']))
+    tmp = a.get_by_index(['b', 'c'])
     assert np.all(tmp.values == np.array([1, 2])) and \
            np.all(tmp.index == np.array(['b', 'c']))
+    
     # test unchange
     assert np.all(a.values == np.arange(5)) and \
            np.all(a.index == np.array(['a', 'b', 'c', 'd', 'e']))
@@ -61,14 +73,23 @@ def test_assign():
     assert np.all(tmp.values == np.array([10, 10, 2, 3, 4])) and \
            np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
     tmp = a.copy()
+    # set by index
     tmp[a.index == 'e'] = 10
     assert np.all(tmp.values == np.array([0, 1, 2, 3, 10])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
+    tmp = a.copy()
+    tmp.set_by_index('e', 10)
+    assert np.all(tmp.values == np.array([0, 1, 2, 3, 10])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
+    tmp = a.copy()
+    tmp.set_by_index(['e', 'd'], [10, 9])
+    assert np.all(tmp.values == np.array([0, 1, 2, 9, 10])) and \
            np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
     # test unchange
     assert np.all(a.values == np.arange(5)) and \
            np.all(a.index == np.array(['a', 'b', 'c', 'd', 'e']))
 
-def test_iterative():
+def test_iter():
     tmp = ""
     for i, v in a.items():
         tmp += "{}{}".format(i, v)
@@ -80,3 +101,54 @@ def test_iterative():
     
 def test_len():
     assert len(a) == len(a.values) and len(a) == len(a.index)
+
+def test_comp_op():
+    tmp = a > 2
+    assert np.all(tmp.values == np.array([False, False, False, True, True])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
+    tmp = a < 2
+    assert np.all(tmp.values == np.array([True, True, False, False, False])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
+    tmp = a == Series([0, 1, 2, 2, 3])
+    assert np.all(tmp.values == np.array([True, True, True, False, False])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
+
+def test_arithmetic_op():
+    tmp = a + 1
+    assert np.all(tmp.values == np.array([1, 2, 3, 4, 5])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
+    tmp = a - Series([1, 2, 3, 4, 5])
+    assert np.all(tmp.values == np.array([-1, -1, -1, -1, -1])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
+           
+def test_dict():
+    tmp = a.dict
+    assert tmp == {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4}
+    
+def test_append():
+    tmp_append = Series([5])
+    tmp = a.append(tmp_append)
+    assert np.all(tmp.values == np.array([0, 1, 2, 3, 4, 5])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e', 0]))
+    tmp = a.append([tmp_append, tmp_append])
+    assert np.all(tmp.values == np.array([0, 1, 2, 3, 4, 5, 5])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e', 0, 0]))
+    # test unchange
+    assert np.all(a.values == np.arange(5)) and \
+           np.all(a.index == np.array(['a', 'b', 'c', 'd', 'e']))
+
+def test_apply():
+    tmp = a.apply(lambda x: x*x)
+    assert np.all(tmp.values == np.array([0, 1, 4, 9, 16])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
+    # test unchange
+    assert np.all(a.values == np.arange(5)) and \
+           np.all(a.index == np.array(['a', 'b', 'c', 'd', 'e']))
+
+def test_replace():
+    tmp = a.replace({i: i+3 for i in range(5)})
+    assert np.all(tmp.values == np.array([3, 4, 5, 6, 7])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
+    # test unchange
+    assert np.all(a.values == np.arange(5)) and \
+           np.all(a.index == np.array(['a', 'b', 'c', 'd', 'e']))
