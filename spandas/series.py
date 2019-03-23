@@ -2,7 +2,7 @@
 faster version of Series
 """
 import numpy as np
-import pandas as pd
+
 """
 A Series is basically a data structure with 2 numpy array: 
     one to store value and the other to store index
