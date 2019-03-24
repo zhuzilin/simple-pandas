@@ -1,6 +1,9 @@
 from .series import Series
 from collections.abc import Iterable
 import numpy as np
+import pandas as pd
+import random
+
 class DataFrame:
     def __init__(self, values, index=None, columns=None, copy=True):
         self.dict = {}
@@ -38,30 +41,11 @@ class DataFrame:
             self.index = np.array(range(l), copy=copy)
 
     def __str__(self):
-        res = "{:>7}".format("index")
-        for k in self.keys():
-            res += "{:>7}".format(k)
-        res += "\n"
-        if len(self) <= 10:
-            for i in range(len(self)):
-                res += "{:>7}".format(self.index[i])
-                for key in self.keys():
-                    res += ("{:>7}".format(self.dict[key][i]))
-                res += "\n"
-        else:
-            for i in range(5):
-                res += "{:>7}".format(self.index[i])
-                for key in self.keys():
-                    res += ("{:>7}".format(self.dict[key][i]))
-                res += "\n"
-            res += ('... ...\n')
-            for i in range(5):
-                res += "{:>7}".format(self.index[len(self) - 5 + i])
-                for key in self.keys():
-                    res += ("{:>7}".format(self.dict[key][len(self) - 5 + i]))
-                res += "\n"
-        return res
-    
+        return str(pd.DataFrame(self.dict, self.index, copy=False))
+
+    def head(self, l = 5):
+        return pd.DataFrame(self.dict, self.index, copy=False).head(l)
+
     def __len__(self):
         return len(self.index)
 
@@ -125,6 +109,7 @@ class DataFrame:
 
     def __delitem__(self, key):
         try:
+            assert not isinstance(key, str)
             for k in key:
                 try:
                     del self.dict[k]
@@ -132,18 +117,6 @@ class DataFrame:
                     pass
         except:
             del self.dict[key]
-
-    def head(self, l = 5):
-        res = "{:>7}".format("index")
-        for k in self.keys():
-            res += "{:>7}".format(k)
-        res += "\n"
-        for i in range(min(l, len(self))):
-            res += "{:>7}".format(self.index[i])
-            for key in self.keys():
-                res += ("{:>7}".format(self.dict[key][i]))
-            res += "\n"
-        return res
 
     def __iter__(self):
         for k in self.dict:
@@ -209,3 +182,10 @@ class DataFrame:
             return Series(res_values, self.index)
         elif type == 'column':
             return Series([func(v) for _, v in self.items()], self.keys())
+    
+    def sample(self, n):
+        perm = np.array(random.sample(range(len(self)), n), copy=False)
+        return DataFrame({k: v[perm] for k, v in self.items()}, self.index[perm])
+    
+    def to_pd(self, copy=True):
+        return pd.DataFrame(self.dict, self.index, copy=copy)

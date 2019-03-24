@@ -402,6 +402,7 @@ The test for DataFrame is [here](https://github.com/zhuzilin/simple-pandas/blob/
 | apply  (row-wise)    | 15x   |
 | apply (column-wise)  | 6x    |
 | iterrow              | 30x   |
+| sample               | 3x    |
 
 ## How simple can it be?
 

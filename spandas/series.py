@@ -2,7 +2,7 @@
 faster version of Series
 """
 import numpy as np
-
+import pandas as pd
 """
 A Series is basically a data structure with 2 numpy array: 
     one to store value and the other to store index
@@ -29,18 +29,7 @@ class Series:
             self.index = np.arange(len(values))
 
     def __str__(self):
-        res = ""
-        if len(self) <= 10:
-            for i in range(len(self)):
-                res += ("{:>7}{:>7}\n".format(self.index[i], self.values[i]))
-        else:
-            for i in range(5):
-                res += ("{:>7}{:>7}\n".format(self.index[i], self.values[i]))
-            res += ('... ...\n')
-            for i in range(5):
-                res += ("{:>7}{:>7}\n".format(self.index[len(self)-5+i], self.values[len(self)-5+i]))
-        res += "dtype: {}".format(self.values.dtype)
-        return res
+        return str(pd.Series(self.values, self.index, copy=False))
 
     # len()
     def __len__(self):
@@ -204,10 +193,7 @@ class Series:
             raise "type error!"
 
     def head(self, l = 5):
-        res = ""
-        for i in range(min(l, len(self))):
-            res += ("{:>7}{:>7}\n".format(self.index[i], self.values[i]))
-        return res
+        return pd.Series(self.values, self.index, copy=False).head(l)
 
     def map(self, d, drop=True):
         if drop:
@@ -227,4 +213,5 @@ class Series:
     def isnull(self):
         return Series(np.isnan(self.values), self.index)
     
-    
+    def to_pd(self, copy=True):
+        return pd.Series(self.values, self.index, copy=copy)
