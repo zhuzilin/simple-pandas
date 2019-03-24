@@ -1,6 +1,6 @@
 # simple pandas
 
- ![travis](https://travis-ci.com/zhuzilin/simple-pandas.svg?branch=master)
+ ![travis](https://travis-ci.com/zhuzilin/simple-pandas.svg?branch=master) [![PyPI pyversions](https://img.shields.io/pypi/pyversions/simple-pandas.svg)](https://pypi.python.org/pypi/simple-pandas/)
 
  ![](https://66.media.tumblr.com/decf9e4a17b56f692c929088e519f032/tumblr_p2q1ak7m3G1uaogmwo9_250.png)
 
