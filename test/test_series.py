@@ -1,6 +1,11 @@
 import sys
-sys.path.append('../')
-from spandas import Series
+import os
+try:
+    sys.path.insert(0, os.path.abspath('..'))  # works for local
+    from spandas import Series
+except:
+    sys.path.insert(0, os.path.abspath('.'))  # works for local
+    from spandas import Series
 import pandas as pd
 import numpy as np
 import math

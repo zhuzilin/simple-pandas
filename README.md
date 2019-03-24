@@ -14,7 +14,7 @@
 If this happens to you as well, then feel free to try my solution to simplify pandas!
 
 ```
-pip install simple-pandas
+pip3 install simple-pandas
 ```
 
 ## Main Features 😆
