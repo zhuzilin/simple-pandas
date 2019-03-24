@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../')
 from spandas import DataFrame
 from spandas import Series
 import pandas as pd
