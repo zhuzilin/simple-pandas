@@ -2,6 +2,7 @@ from spandas import DataFrame
 from spandas import Series
 import pandas as pd
 import numpy as np
+import math
 
 values = {'a': np.array([1, 2, 3]), 
           'b': np.array([4, 5, 6]), 
@@ -10,7 +11,7 @@ index = np.array(['a', 'b', 'c'])
 a = DataFrame(values, index)
 
 def test_constructor():
-    assert a.keys() == values.keys()
+    assert a.keys() == list(values.keys())
     tmp = DataFrame(values, index, copy=False)
     for k in values:
         assert id(values[k]) == id(tmp.dict[k])
@@ -166,3 +167,28 @@ def test_iter():
         tmp += str(k)
         tmp_sum += v['b']
     assert tmp == "abc" and tmp_sum == 15
+
+def test_apply():
+    grade = DataFrame({'A': [100, 90, 80, 60],
+                           'B': [90, 85, 85, 100],
+                           'C': [70, 100, 100, 80]},
+                          index=['a', 'b', 'c', 'd'])
+    # element-wise
+    tmp = grade.apply(lambda x: int(math.sqrt(x)*10))
+    assert np.all(tmp.dict['A'] == np.array([100, 94, 89, 77])) and \
+           np.all(tmp.dict['B'] == np.array([94, 92, 92, 100])) and \
+           np.all(tmp.dict['C'] == np.array([83, 100, 100, 89])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd']))
+    # row-wise
+    tmp = grade.apply(lambda x: x['A']+x['B']+x['C'], type='row')
+    assert np.all(tmp.values == np.array([260, 275, 265, 240])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd']))
+    # column wise
+    tmp = grade.apply(lambda x: int(x.mean()), type='column')
+    assert np.all(tmp.values == np.array([82, 90, 87])) and \
+           np.all(tmp.index == np.array(['A', 'B', 'C']))
+    # test unchanged
+    assert np.all(grade.dict['A'] == np.array([100, 90, 80, 60])) and \
+           np.all(grade.dict['B'] == np.array([90, 85, 85, 100])) and \
+           np.all(grade.dict['C'] == np.array([70, 100, 100, 80])) and \
+           np.all(grade.index == np.array(['a', 'b', 'c', 'd']))

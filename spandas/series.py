@@ -194,9 +194,14 @@ class Series:
             return Series(np.append(self.values, append_values), np.append(self.index, append_index))
         return Series(np.append(self.values, s.values), np.append(self.index, s.index))
 
-    def apply(self, f):
-        vf = np.vectorize(f)
-        return Series(vf(self.values), self.index)
+    def apply(self, f, type='element'):
+        if type == 'element':
+            vf = np.vectorize(f)
+            return Series(vf(self.values), self.index)
+        elif type == 'column':
+            return f(self.values)
+        else:
+            raise "type error!"
 
     def head(self, l = 5):
         res = ""
@@ -204,9 +209,9 @@ class Series:
             res += ("{:>7}{:>7}\n".format(self.index[i], self.values[i]))
         return res
 
-    def replace(self, d, drop=True):
+    def map(self, d, drop=True):
         if drop:
-            return Series([d[x] for x in self.values if x in d], self.index)
+            return Series([d[x] if x in d else np.nan for x in self.values], self.index)
         else:
             return Series([d[x] if x in d else x for x in self.values], self.index)
     

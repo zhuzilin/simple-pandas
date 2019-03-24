@@ -134,7 +134,7 @@ class DataFrame:
             del self.dict[key]
 
     def head(self, l = 5):
-        res = "idx"
+        res = "{:>7}".format("index")
         for k in self.keys():
             res += "{:>7}".format(k)
         res += "\n"
@@ -180,7 +180,7 @@ class DataFrame:
             return DataFrame(res_dict, res_index)
 
     def keys(self):
-        return self.dict.keys()
+        return list(self.dict.keys())
     
     def copy(self):
         return DataFrame(self.dict, self.index)
@@ -196,4 +196,16 @@ class DataFrame:
         res_values = np.array([self.dict[k] for k in res_index], copy=False).T
         res_dict = dict(zip(res_columns, res_values))
         return DataFrame(res_dict, index=res_index, columns=res_columns)
-        
+
+    def apply(self, func, type='element'):
+        if type == 'element':
+            f = np.vectorize(func)
+            res_dict = {k: f(v) for k, v in self.dict.items()}
+            return DataFrame(res_dict, self.index)
+        elif type == 'row':
+            res_values = []
+            for _, v in self.iterrows():
+                res_values.append(func(v))
+            return Series(res_values, self.index)
+        elif type == 'column':
+            return Series([func(v) for _, v in self.items()], self.keys())

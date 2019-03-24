@@ -1,6 +1,7 @@
 from spandas import Series
 import pandas as pd
 import numpy as np
+import math
 
 values = np.arange(5)
 index = np.array(['a', 'b', 'c', 'd', 'e'])
@@ -138,15 +139,18 @@ def test_append():
            np.all(a.index == np.array(['a', 'b', 'c', 'd', 'e']))
 
 def test_apply():
-    tmp = a.apply(lambda x: x*x)
-    assert np.all(tmp.values == np.array([0, 1, 4, 9, 16])) and \
-           np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
+    grade = Series([100, 90, 80, 60], index=['a', 'b', 'c', 'd'])
+    tmp = grade.apply(lambda x: int(math.sqrt(x)*10))
+    assert np.all(tmp.values == np.array([100, 94, 89, 77])) and \
+           np.all(tmp.index == np.array(['a', 'b', 'c', 'd']))
+    tmp = grade.apply(np.mean)
+    assert tmp == 82.5
     # test unchange
-    assert np.all(a.values == np.arange(5)) and \
-           np.all(a.index == np.array(['a', 'b', 'c', 'd', 'e']))
+    assert np.all(grade.values == np.array([100, 90, 80, 60])) and \
+           np.all(grade.index == np.array(['a', 'b', 'c', 'd']))
 
-def test_replace():
-    tmp = a.replace({i: i+3 for i in range(5)})
+def test_map():
+    tmp = a.map({i: i+3 for i in range(5)})
     assert np.all(tmp.values == np.array([3, 4, 5, 6, 7])) and \
            np.all(tmp.index == np.array(['a', 'b', 'c', 'd', 'e']))
     # test unchange
