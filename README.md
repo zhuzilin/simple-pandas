@@ -45,12 +45,12 @@ simple_s = spd.Series(s, s.index)
 simple_df = spd.DataFrame(df, df.index)
 ```
 
-And to convert back, only:
+And to convert back, only use `to_pd()` method:
 
 ```python
 import pandas as pd
-s = pd.Series(simple_s.values, simple_s.index)
-df = pd.DataFrame(simple_df.dict, simple_df.idnex)
+s = simple_s.to_pd()
+df = simple_df.to_pd()
 ```
 
 ## Indexing
@@ -86,7 +86,7 @@ dtype: int32
 And of course, we could index with a boolean Series
 
 ```python
->>> print(a[a>2])
+>>> print(a[a > 2])
       c      3
       d      4
       e      5
